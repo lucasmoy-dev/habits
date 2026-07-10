@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="description" content="Gestor de hábitos semanal con rachas, recordatorios y alarmas">
+  <title>Hábitos</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-row">
+      <h1 class="app-title">Hábitos</h1>
+      <button id="btn-settings" class="icon-btn" title="Configuración" aria-label="Configuración">⚙️</button>
+    </div>
+    <div class="week-nav">
+      <button id="btn-prev-week" class="icon-btn" aria-label="Semana anterior">‹</button>
+      <div class="week-label-wrap">
+        <span id="week-label" class="week-label"></span>
+        <button id="btn-today" class="btn-today hidden">Hoy</button>
+      </div>
+      <button id="btn-next-week" class="icon-btn" aria-label="Semana siguiente">›</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div id="habits-grid" class="habits-grid"></div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <div class="empty-icon">🌱</div>
+      <p>Todavía no tenés hábitos.</p>
+      <p class="muted">Creá el primero y empezá a construir tu racha.</p>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="dot dot-new"></span> Nuevo / en integración</span>
+      <span class="legend-item"><span class="dot dot-building"></span> Construyendo racha</span>
+      <span class="legend-item"><span class="dot dot-strong"></span> Integrado (+30 días)</span>
+    </div>
+  </main>
+
+  <button id="btn-add-habit" class="fab" aria-label="Agregar hábito">+</button>
+
+  <!-- ===== Modal: editor de hábito ===== -->
+  <div id="modal-habit" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2 id="habit-modal-title">Nuevo hábito</h2>
+      <form id="form-habit">
+        <label class="field">
+          <span>Nombre</span>
+          <input type="text" id="habit-name" maxlength="60" required placeholder="Ej: Meditar 10 minutos">
+        </label>
+
+        <label class="field">
+          <span>Emoji (opcional)</span>
+          <input type="text" id="habit-emoji" maxlength="4" placeholder="🧘">
+        </label>
+
+        <label class="field">
+          <span>Frecuencia</span>
+          <select id="habit-rule-type">
+            <option value="daily">Todos los días</option>
+            <option value="weekly">X veces por semana</option>
+            <option value="days">Días específicos</option>
+          </select>
+        </label>
+
+        <label class="field hidden" id="field-times-per-week">
+          <span>Veces por semana</span>
+          <input type="number" id="habit-times" min="1" max="7" value="2">
+        </label>
+
+        <div class="field hidden" id="field-days">
+          <span>Días</span>
+          <div class="day-picker" id="day-picker">
+            <label><input type="checkbox" value="1"><span>L</span></label>
+            <label><input type="checkbox" value="2"><span>M</span></label>
+            <label><input type="checkbox" value="3"><span>X</span></label>
+            <label><input type="checkbox" value="4"><span>J</span></label>
+            <label><input type="checkbox" value="5"><span>V</span></label>
+            <label><input type="checkbox" value="6"><span>S</span></label>
+            <label><input type="checkbox" value="0"><span>D</span></label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-inline">
+            <input type="checkbox" id="habit-reminder-enabled">
+            <span>Recordatorio con notificación</span>
+          </label>
+          <label class="field hidden" id="field-reminder-time">
+            <span>Hora</span>
+            <input type="time" id="habit-reminder-time" value="09:00">
+          </label>
+          <label class="field-inline hidden" id="field-alarm">
+            <input type="checkbox" id="habit-alarm-enabled">
+            <span>Alarma con sonido 🔔</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="btn-delete-habit" class="btn btn-danger hidden">Eliminar</button>
+          <span class="spacer"></span>
+          <button type="button" id="btn-cancel-habit" class="btn">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Modal: configuración ===== -->
+  <div id="modal-settings" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2>Configuración</h2>
+
+      <section class="settings-section">
+        <h3>Notificaciones</h3>
+        <p id="notif-status" class="muted small"></p>
+        <button id="btn-enable-notifs" class="btn">Activar notificaciones</button>
+        <p class="muted small">⚠️ Los recordatorios y alarmas funcionan mientras la app está abierta
+          (aunque sea en segundo plano). Instalá la PWA y dejala abierta para no perderlos.</p>
+      </section>
+
+      <section class="settings-section">
+        <h3>Copia de seguridad — Google Drive</h3>
+        <label class="field">
+          <span>Google OAuth Client ID</span>
+          <input type="text" id="drive-client-id" placeholder="xxxx.apps.googleusercontent.com">
+        </label>
+        <p class="muted small">Creá un Client ID (tipo "Web") en
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a>,
+          habilitá la API de Drive y agregá este origen como autorizado.</p>
+        <div class="btn-row">
+          <button id="btn-drive-export" class="btn btn-primary">Exportar a Drive</button>
+          <button id="btn-drive-import" class="btn">Importar de Drive</button>
+        </div>
+        <p id="drive-status" class="muted small"></p>
+      </section>
+
+      <section class="settings-section">
+        <h3>Copia de seguridad — Archivo local</h3>
+        <div class="btn-row">
+          <button id="btn-file-export" class="btn">Descargar backup</button>
+          <button id="btn-file-import" class="btn">Restaurar backup</button>
+          <input type="file" id="file-import-input" accept="application/json" class="hidden">
+        </div>
+      </section>
+
+      <div class="modal-actions">
+        <span class="spacer"></span>
+        <button id="btn-close-settings" class="btn btn-primary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Overlay: alarma sonando ===== -->
+  <div id="alarm-overlay" class="alarm-overlay hidden">
+    <div class="alarm-content">
+      <div class="alarm-bell">🔔</div>
+      <h2 id="alarm-habit-name"></h2>
+      <p>¡Es hora de tu hábito!</p>
+      <button id="btn-stop-alarm" class="btn btn-primary btn-big">Detener</button>
+      <button id="btn-done-alarm" class="btn btn-big">Ya lo hice ✓</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="js/storage.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/drive.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

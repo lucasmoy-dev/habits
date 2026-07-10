@@ -42,7 +42,6 @@ const Habits = (() => {
     const habit = {
       id: 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       name: data.name,
-      emoji: data.emoji || '',
       rule: data.rule,               // {type:'daily'} | {type:'weekly', times:n} | {type:'days', days:[0-6]}
       reminder: data.reminder,       // {enabled, time:'HH:MM', alarm:bool}
       createdAt: dateKey(today()),
@@ -57,11 +56,20 @@ const Habits = (() => {
     const h = get(id);
     if (!h) return;
     h.name = data.name;
-    h.emoji = data.emoji || '';
     h.rule = data.rule;
     h.reminder = data.reminder;
     Storage.save();
     return h;
+  }
+
+  // mueve el hábito de una posición a otra (drag & drop)
+  function move(fromIndex, toIndex) {
+    const habits = all();
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0
+        || fromIndex >= habits.length || toIndex >= habits.length) return;
+    const [h] = habits.splice(fromIndex, 1);
+    habits.splice(toIndex, 0, h);
+    Storage.save();
   }
 
   function remove(id) {
@@ -143,6 +151,90 @@ const Habits = (() => {
     return Math.round((t - earliest) / 86400000) + 1;
   }
 
+  // Mejor racha histórica en días calendario
+  function bestStreakDays(habit) {
+    const t = today();
+    const created = new Date(habit.createdAt + 'T00:00:00');
+
+    if (habit.rule.type === 'weekly') {
+      const times = habit.rule.times || 1;
+      let best = 0, run = 0;
+      for (let ws = weekStart(created); ws <= t; ws = addDays(ws, 7)) {
+        const isCurrent = ws.getTime() === weekStart(t).getTime();
+        if (doneCountInWeek(habit, ws) >= times) {
+          run++;
+          best = Math.max(best, run);
+        } else if (!isCurrent) {
+          run = 0; // la semana en curso pendiente no corta
+        }
+      }
+      return best * 7;
+    }
+
+    let best = 0, runStart = null;
+    for (let d = new Date(created); d <= t; d = addDays(d, 1)) {
+      if (!isScheduled(habit, d)) continue;
+      if (isDone(habit, d)) {
+        if (!runStart) runStart = new Date(d);
+        best = Math.max(best, Math.round((d - runStart) / 86400000) + 1);
+      } else if (d.getTime() !== t.getTime()) {
+        runStart = null; // hoy pendiente no corta
+      }
+    }
+    return best;
+  }
+
+  // Cumplimiento en un rango [start, end] (inclusive): hecho vs. esperado
+  function rangeStats(habit, start, end) {
+    const t = today();
+    const created = new Date(habit.createdAt + 'T00:00:00');
+    const from = created > start ? created : new Date(start);
+    const to = t < end ? t : new Date(end);
+    if (from > to) return { done: 0, expected: 0, pct: null };
+
+    let done = 0, expected = 0;
+    const dayCount = Math.round((to - from) / 86400000) + 1;
+
+    if (habit.rule.type === 'weekly') {
+      const times = habit.rule.times || 1;
+      expected = Math.ceil(times * dayCount / 7);
+      for (let d = new Date(from); d <= to; d = addDays(d, 1)) {
+        if (isDone(habit, d)) done++;
+      }
+    } else {
+      for (let d = new Date(from); d <= to; d = addDays(d, 1)) {
+        if (!isScheduled(habit, d)) continue;
+        expected++;
+        if (isDone(habit, d)) done++;
+      }
+    }
+    const pct = expected > 0 ? Math.min(100, Math.round(done / expected * 100)) : null;
+    return { done: Math.min(done, expected), expected, pct };
+  }
+
+  // Cumplimiento global por semana, últimas nWeeks (incluye la actual, parcial)
+  function weeklyCompletion(nWeeks) {
+    const habits = all();
+    const thisWeek = weekStart(today());
+    const result = [];
+    for (let i = nWeeks - 1; i >= 0; i--) {
+      const ws = addDays(thisWeek, -7 * i);
+      const we = addDays(ws, 6);
+      let done = 0, expected = 0;
+      for (const h of habits) {
+        const s = rangeStats(h, ws, we);
+        done += s.done;
+        expected += s.expected;
+      }
+      result.push({
+        start: ws,
+        done, expected,
+        pct: expected > 0 ? Math.round(done / expected * 100) : null,
+      });
+    }
+    return result;
+  }
+
   // Estado de integración según la racha
   function status(habit) {
     const days = streakDays(habit);
@@ -162,8 +254,9 @@ const Habits = (() => {
 
   return {
     dateKey, today, addDays, weekStart,
-    all, get, create, update, remove, toggle,
+    all, get, create, update, remove, toggle, move,
     isDone, isScheduled, doneCountInWeek,
-    streakDays, status, ruleLabel,
+    streakDays, bestStreakDays, rangeStats, weeklyCompletion,
+    status, ruleLabel,
   };
 })();

@@ -20,11 +20,25 @@ const Storage = (() => {
     try {
       const raw = localStorage.getItem(KEY);
       cache = raw ? Object.assign(defaults(), JSON.parse(raw)) : defaults();
+      migrate(cache);
     } catch (e) {
       console.error('Error leyendo localStorage', e);
       cache = defaults();
     }
     return cache;
+  }
+
+  // migración: el campo emoji se fusiona dentro del nombre
+  function migrate(data) {
+    let changed = false;
+    for (const h of data.habits) {
+      if (h.emoji) {
+        h.name = (h.emoji + ' ' + h.name).trim();
+        delete h.emoji;
+        changed = true;
+      }
+    }
+    if (changed) save();
   }
 
   function save() {

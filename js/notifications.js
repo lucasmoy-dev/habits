@@ -59,7 +59,7 @@ const Notifications = (() => {
   }
 
   async function fireReminder(habit) {
-    const title = `${habit.emoji || '⏰'} ${habit.name}`;
+    const title = `⏰ ${habit.name}`;
     const body = habit.reminder.alarm
       ? '¡Es hora! Tocá para detener la alarma.'
       : 'Recordatorio: todavía no marcaste este hábito hoy.';
@@ -119,8 +119,7 @@ const Notifications = (() => {
     if (alarmActive) return;
     alarmActive = habit.id;
 
-    document.getElementById('alarm-habit-name').textContent =
-      `${habit.emoji || ''} ${habit.name}`.trim();
+    document.getElementById('alarm-habit-name').textContent = habit.name;
     document.getElementById('alarm-overlay').classList.remove('hidden');
 
     try {

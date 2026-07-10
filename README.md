@@ -9,6 +9,11 @@ desde GitHub Pages y guarda todo en `localStorage`.
 ## Funcionalidades
 
 - **Grilla semanal** (lunes a domingo): tocá una celda para marcar el hábito como hecho ese día.
+- **Menú inferior** con Inicio, Estadísticas, botón central de agregar y Ajustes.
+- **Estadísticas**: hábitos activos, completados en 30 días, mejor racha activa,
+  gráfico de cumplimiento semanal (últimas 12 semanas) y desglose por hábito
+  (racha actual, mejor racha histórica, % de cumplimiento).
+- **Ordenar hábitos** arrastrándolos desde el asa ⠿ (mouse o touch).
 - **Reglas de frecuencia** por hábito:
   - Todos los días
   - X veces por semana (muestra progreso `2/3`)

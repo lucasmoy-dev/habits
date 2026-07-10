@@ -29,22 +29,37 @@
   </header>
 
   <main class="app-main">
-    <div id="habits-grid" class="habits-grid"></div>
+    <section id="view-home">
+      <div id="habits-grid" class="habits-grid"></div>
 
-    <div id="empty-state" class="empty-state hidden">
-      <div class="empty-icon">🌱</div>
-      <p>Todavía no tenés hábitos.</p>
-      <p class="muted">Creá el primero y empezá a construir tu racha.</p>
-    </div>
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-icon">🌱</div>
+        <p>Todavía no tenés hábitos.</p>
+        <p class="muted">Creá el primero y empezá a construir tu racha.</p>
+      </div>
 
-    <div class="legend">
-      <span class="legend-item"><span class="dot dot-new"></span> Nuevo / en integración</span>
-      <span class="legend-item"><span class="dot dot-building"></span> Construyendo racha</span>
-      <span class="legend-item"><span class="dot dot-strong"></span> Integrado (+30 días)</span>
-    </div>
+      <div class="legend">
+        <span class="legend-item"><span class="dot dot-new"></span> Nuevo / en integración</span>
+        <span class="legend-item"><span class="dot dot-building"></span> Construyendo racha</span>
+        <span class="legend-item"><span class="dot dot-strong"></span> Integrado (+30 días)</span>
+      </div>
+    </section>
+
+    <section id="view-stats" class="hidden"></section>
   </main>
 
-  <button id="btn-add-habit" class="fab" aria-label="Agregar hábito">+</button>
+  <nav class="bottom-nav">
+    <button id="nav-home" class="nav-btn active" aria-label="Inicio">
+      <span class="nav-icon">🏠</span><span class="nav-text">Inicio</span>
+    </button>
+    <button id="nav-stats" class="nav-btn" aria-label="Estadísticas">
+      <span class="nav-icon">📊</span><span class="nav-text">Estadísticas</span>
+    </button>
+    <button id="btn-add-habit" class="nav-add" aria-label="Agregar hábito">+</button>
+    <button id="nav-settings" class="nav-btn" aria-label="Ajustes">
+      <span class="nav-icon">⚙️</span><span class="nav-text">Ajustes</span>
+    </button>
+  </nav>
 
   <!-- ===== Modal: editor de hábito ===== -->
   <div id="modal-habit" class="modal-backdrop hidden">
@@ -53,12 +68,7 @@
       <form id="form-habit">
         <label class="field">
           <span>Nombre</span>
-          <input type="text" id="habit-name" maxlength="60" required placeholder="Ej: Meditar 10 minutos">
-        </label>
-
-        <label class="field">
-          <span>Emoji (opcional)</span>
-          <input type="text" id="habit-emoji" maxlength="4" placeholder="🧘">
+          <input type="text" id="habit-name" maxlength="60" required placeholder="Ej: 🧘 Meditar 10 minutos">
         </label>
 
         <label class="field">

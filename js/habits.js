@@ -42,6 +42,7 @@ const Habits = (() => {
     const habit = {
       id: 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       name: data.name,
+      categoryId: data.categoryId || null,
       rule: data.rule,               // {type:'daily'} | {type:'weekly', times:n} | {type:'days', days:[0-6]}
       reminder: data.reminder,       // {enabled, time:'HH:MM', alarm:bool}
       createdAt: dateKey(today()),
@@ -56,10 +57,64 @@ const Habits = (() => {
     const h = get(id);
     if (!h) return;
     h.name = data.name;
+    h.categoryId = data.categoryId || null;
     h.rule = data.rule;
     h.reminder = data.reminder;
     Storage.save();
     return h;
+  }
+
+  // ---- Categorías ----
+  function categories() {
+    return Storage.load().categories;
+  }
+
+  function getCategory(id) {
+    return categories().find(c => c.id === id);
+  }
+
+  function createCategory(name) {
+    name = name.trim();
+    if (!name) return null;
+    const existing = categories().find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existing) return existing;
+    const cat = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name };
+    categories().push(cat);
+    Storage.save();
+    return cat;
+  }
+
+  function removeCategory(id) {
+    const data = Storage.load();
+    data.categories = data.categories.filter(c => c.id !== id);
+    for (const h of data.habits) {
+      if (h.categoryId === id) h.categoryId = null;
+    }
+    Storage.save();
+  }
+
+  // % de cumplimiento (últimos `days` días) por categoría; incluye categorías vacías
+  function categoryStats(days) {
+    const t = today();
+    const start = addDays(t, -(days - 1));
+    const habits = all();
+    const groups = categories().map(c => ({ id: c.id, name: c.name, pcts: [], habitCount: 0 }));
+    const uncat = { id: null, name: 'Sin categoría', pcts: [], habitCount: 0 };
+
+    for (const h of habits) {
+      const g = groups.find(g => g.id === h.categoryId) || uncat;
+      g.habitCount++;
+      const s = rangeStats(h, start, t);
+      if (s.pct !== null) g.pcts.push(s.pct);
+    }
+    if (uncat.habitCount > 0) groups.push(uncat);
+
+    return groups.map(g => ({
+      id: g.id,
+      name: g.name,
+      habitCount: g.habitCount,
+      pct: g.pcts.length ? Math.round(g.pcts.reduce((a, b) => a + b, 0) / g.pcts.length) : 0,
+    }));
   }
 
   // mueve el hábito de una posición a otra (drag & drop)
@@ -255,6 +310,7 @@ const Habits = (() => {
   return {
     dateKey, today, addDays, weekStart,
     all, get, create, update, remove, toggle, move,
+    categories, getCategory, createCategory, removeCategory, categoryStats,
     isDone, isScheduled, doneCountInWeek,
     streakDays, bestStreakDays, rangeStats, weeklyCompletion,
     status, ruleLabel,

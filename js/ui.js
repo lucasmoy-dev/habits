@@ -87,6 +87,7 @@ const UI = (() => {
       progressTxt = `<span>${done}/${habit.rule.times}</span>`;
     }
 
+    const cat = habit.categoryId ? Habits.getCategory(habit.categoryId) : null;
     const text = document.createElement('div');
     text.className = 'habit-info-text';
     text.title = 'Editar hábito';
@@ -94,6 +95,7 @@ const UI = (() => {
       <div class="habit-name">${escapeHtml(habit.name)}</div>
       <div class="habit-meta">
         <span class="badge ${badgeClass}">${st.label}</span>
+        ${cat ? `<span class="badge badge-cat">${escapeHtml(cat.name)}</span>` : ''}
         ${streakTxt}
         ${progressTxt}
         <span>${Habits.ruleLabel(habit)}</span>
@@ -237,12 +239,83 @@ const UI = (() => {
       </div>
 
       <div class="stats-panel">
+        <h3>Balance por categoría — últimos 30 días</h3>
+        <div class="radar-wrap" id="category-radar"></div>
+      </div>
+
+      <div class="stats-panel">
         <h3>Por hábito — últimos 30 días</h3>
         <div id="habit-stats-list"></div>
       </div>`;
 
     renderWeeklyChart($('weekly-chart'), Habits.weeklyCompletion(12));
+    renderRadar($('category-radar'), Habits.categoryStats(30));
     renderHabitStats($('habit-stats-list'), habits, start30, t);
+  }
+
+  // Radar estilo "stats de jugador": un eje por categoría, polígono = % cumplimiento
+  function renderRadar(container, cats) {
+    if (cats.length < 3) {
+      // con menos de 3 ejes no hay polígono: barras simples como fallback
+      container.innerHTML = `
+        <p class="muted small radar-hint">Con 3+ categorías esto se convierte en un radar 🕸️</p>
+        ${cats.map(c => `
+          <div class="habit-stat-row">
+            <div class="habit-stat-top">
+              <span class="habit-stat-name">${escapeHtml(c.name)}</span>
+              <span class="habit-stat-nums">${c.habitCount} hábito${c.habitCount === 1 ? '' : 's'} · ${c.pct}%</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:${c.pct}%"></div></div>
+          </div>`).join('')}
+        ${cats.length === 0 ? '<p class="muted small radar-hint">Creá categorías en Ajustes y asignálas a tus hábitos.</p>' : ''}`;
+      return;
+    }
+
+    const W = 360, H = 320;
+    const cx = W / 2, cy = H / 2 + 4;
+    const R = 100;
+    const n = cats.length;
+    const angle = (i) => -Math.PI / 2 + (2 * Math.PI * i) / n;
+    const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+    const poly = (r) => cats.map((_, i) => pt(i, r).map(v => v.toFixed(1)).join(',')).join(' ');
+
+    // anillos de referencia + ejes
+    let gridSvg = '';
+    for (const frac of [0.25, 0.5, 0.75, 1]) {
+      gridSvg += `<polygon points="${poly(R * frac)}" fill="none" stroke="#2a2f3a" stroke-width="1"/>`;
+    }
+    cats.forEach((_, i) => {
+      const [x, y] = pt(i, R);
+      gridSvg += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#2a2f3a" stroke-width="1"/>`;
+    });
+
+    // polígono de datos con vértices
+    const dataPoints = cats.map((c, i) => pt(i, R * c.pct / 100));
+    const dataSvg = `
+      <polygon points="${dataPoints.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ')}"
+        fill="rgba(79,140,255,0.24)" stroke="#4f8cff" stroke-width="2" stroke-linejoin="round"/>
+      ${dataPoints.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5"
+        fill="#4f8cff" stroke="#171a21" stroke-width="2"/>`).join('')}`;
+
+    // etiquetas: nombre + % en el extremo de cada eje
+    let labelsSvg = '';
+    cats.forEach((c, i) => {
+      const [x, y] = pt(i, R + 16);
+      const cos = Math.cos(angle(i));
+      const anchor = cos > 0.35 ? 'start' : cos < -0.35 ? 'end' : 'middle';
+      const name = c.name.length > 12 ? c.name.slice(0, 11) + '…' : c.name;
+      labelsSvg += `
+        <text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="11.5" fill="#8b91a0">
+          ${escapeHtml(name)}
+          <tspan x="${x.toFixed(1)}" dy="13" font-weight="700" fill="#e8eaf0">${c.pct}%</tspan>
+        </text>`;
+    });
+
+    container.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumplimiento por categoría">
+        ${gridSvg}${dataSvg}${labelsSvg}
+      </svg>
+      <p class="muted small radar-hint">${cats.map(c => `${escapeHtml(c.name)}: ${c.habitCount} hábito${c.habitCount === 1 ? '' : 's'}`).join(' · ')}</p>`;
   }
 
   // Barras SVG: % de cumplimiento por semana (una sola serie, hue acento)
@@ -349,6 +422,7 @@ const UI = (() => {
     $('btn-delete-habit').classList.toggle('hidden', !habit);
 
     $('habit-name').value = habit ? habit.name : '';
+    fillCategorySelect(habit ? habit.categoryId : null);
     $('habit-rule-type').value = habit ? habit.rule.type : 'daily';
     $('habit-times').value = habit && habit.rule.type === 'weekly' ? habit.rule.times : 2;
 
@@ -365,6 +439,27 @@ const UI = (() => {
     syncReminderFields();
     $('modal-habit').classList.remove('hidden');
     $('habit-name').focus();
+  }
+
+  function fillCategorySelect(selectedId) {
+    const sel = $('habit-category');
+    sel.innerHTML = '<option value="">Sin categoría</option>' +
+      Habits.categories().map(c =>
+        `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('') +
+      '<option value="__new__">＋ Nueva categoría…</option>';
+    sel.value = selectedId && Habits.getCategory(selectedId) ? selectedId : '';
+  }
+
+  function onCategoryChange() {
+    const sel = $('habit-category');
+    if (sel.value !== '__new__') return;
+    const name = prompt('Nombre de la nueva categoría:');
+    if (name && name.trim()) {
+      const cat = Habits.createCategory(name);
+      fillCategorySelect(cat.id);
+    } else {
+      sel.value = '';
+    }
   }
 
   function closeHabitModal() {
@@ -404,7 +499,12 @@ const UI = (() => {
       alarm: $('habit-alarm-enabled').checked,
     };
 
-    const data = { name: $('habit-name').value.trim(), rule, reminder };
+    const catValue = $('habit-category').value;
+    const data = {
+      name: $('habit-name').value.trim(),
+      categoryId: (catValue && catValue !== '__new__') ? catValue : null,
+      rule, reminder,
+    };
     if (!data.name) return;
 
     if (editingHabitId) Habits.update(editingHabitId, data);
@@ -422,7 +522,36 @@ const UI = (() => {
   function openSettings() {
     $('drive-client-id').value = Storage.load().settings.driveClientId || '';
     refreshNotifStatus();
+    renderCategoryList();
     $('modal-settings').classList.remove('hidden');
+  }
+
+  function renderCategoryList() {
+    const habits = Habits.all();
+    const cats = Habits.categories();
+    const list = $('category-list');
+    if (!cats.length) {
+      list.innerHTML = '<p class="muted small">Sin categorías todavía.</p>';
+      return;
+    }
+    list.innerHTML = cats.map(c => {
+      const count = habits.filter(h => h.categoryId === c.id).length;
+      return `<div class="category-item">
+        <span>${escapeHtml(c.name)} <span class="cat-count">· ${count} hábito${count === 1 ? '' : 's'}</span></span>
+        <button class="cat-delete" data-id="${c.id}" aria-label="Eliminar categoría">✕</button>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('.cat-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = Habits.getCategory(btn.dataset.id);
+        if (cat && confirm(`¿Eliminar la categoría "${cat.name}"? Los hábitos quedan sin categoría.`)) {
+          Habits.removeCategory(btn.dataset.id);
+          renderCategoryList();
+          render();
+        }
+      });
+    });
   }
 
   function refreshNotifStatus() {
@@ -455,7 +584,21 @@ const UI = (() => {
 
     $('btn-cancel-habit').addEventListener('click', closeHabitModal);
     $('form-habit').addEventListener('submit', saveHabitFromForm);
+    $('habit-category').addEventListener('change', onCategoryChange);
     $('habit-rule-type').addEventListener('change', syncRuleFields);
+
+    // categorías en ajustes
+    $('btn-add-category').addEventListener('click', () => {
+      const input = $('new-category-name');
+      if (input.value.trim()) {
+        Habits.createCategory(input.value);
+        input.value = '';
+        renderCategoryList();
+      }
+    });
+    $('new-category-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); $('btn-add-category').click(); }
+    });
     $('habit-reminder-enabled').addEventListener('change', syncReminderFields);
 
     $('btn-delete-habit').addEventListener('click', () => {

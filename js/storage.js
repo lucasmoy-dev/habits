@@ -6,6 +6,7 @@ const Storage = (() => {
   const defaults = () => ({
     version: VERSION,
     habits: [],
+    categories: [],                  // [{id, name}]
     settings: {
       driveClientId: '',
     },

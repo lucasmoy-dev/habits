@@ -16,7 +16,12 @@
   <header class="app-header">
     <div class="header-row">
       <h1 class="app-title">Hábitos</h1>
-      <button id="btn-settings" class="icon-btn" title="Configuración" aria-label="Configuración">⚙️</button>
+      <button id="btn-settings" class="icon-btn" title="Configuración" aria-label="Configuración">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
     <div class="week-nav">
       <button id="btn-prev-week" class="icon-btn" aria-label="Semana anterior">‹</button>
@@ -50,14 +55,29 @@
 
   <nav class="bottom-nav">
     <button id="nav-home" class="nav-btn active" aria-label="Inicio">
-      <span class="nav-icon">🏠</span><span class="nav-text">Inicio</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <path d="M9 22V12h6v10"/>
+      </svg>
+      <span class="nav-text">Inicio</span>
     </button>
     <button id="nav-stats" class="nav-btn" aria-label="Estadísticas">
-      <span class="nav-icon">📊</span><span class="nav-text">Estadísticas</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+      </svg>
+      <span class="nav-text">Estadísticas</span>
     </button>
-    <button id="btn-add-habit" class="nav-add" aria-label="Agregar hábito">+</button>
+    <button id="btn-add-habit" class="nav-add" aria-label="Agregar hábito">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
     <button id="nav-settings" class="nav-btn" aria-label="Ajustes">
-      <span class="nav-icon">⚙️</span><span class="nav-text">Ajustes</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span class="nav-text">Ajustes</span>
     </button>
   </nav>
 
@@ -69,6 +89,11 @@
         <label class="field">
           <span>Nombre</span>
           <input type="text" id="habit-name" maxlength="60" required placeholder="Ej: 🧘 Meditar 10 minutos">
+        </label>
+
+        <label class="field">
+          <span>Categoría</span>
+          <select id="habit-category"></select>
         </label>
 
         <label class="field">
@@ -134,6 +159,15 @@
         <button id="btn-enable-notifs" class="btn">Activar notificaciones</button>
         <p class="muted small">⚠️ Los recordatorios y alarmas funcionan mientras la app está abierta
           (aunque sea en segundo plano). Instalá la PWA y dejala abierta para no perderlos.</p>
+      </section>
+
+      <section class="settings-section">
+        <h3>Categorías</h3>
+        <div id="category-list" class="category-list"></div>
+        <div class="btn-row">
+          <input type="text" id="new-category-name" class="inline-input" maxlength="30" placeholder="Nueva categoría">
+          <button id="btn-add-category" class="btn">Agregar</button>
+        </div>
       </section>
 
       <section class="settings-section">

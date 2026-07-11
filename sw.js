@@ -1,5 +1,5 @@
 /* Service worker: cache offline del app shell + click en notificaciones. */
-const CACHE = 'habits-v2';
+const CACHE = 'habits-v3';
 const ASSETS = [
   './',
   './index.html',
